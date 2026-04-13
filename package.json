@@ -1,0 +1,32 @@
+{
+  "name": "node-with-ai",
+  "version": "1.0.0",
+  "description": "Mini-Perplexity - Projet IPSSI NodeJs avec IA",
+  "type": "module",
+  "scripts": {
+    "check": "node check-connections.js",
+    "check:verbose": "node check-connections.js --verbose",
+    "cost": "node cost-calculator.js",
+    "lab": "node prompt-lab.js",
+    "compare": "node comparateur.js",
+    "server": "node server.js",
+    "same-model": "node same-model.js",
+    "stress": "node stress-test.js",
+    "sensitivity": "node prompt-sensitivity.js",
+    "multilang": "node multi-langue.js",
+    "dashboard": "node dashboard.js"
+  },
+  "keywords": [
+    "ai",
+    "llm",
+    "mistral",
+    "groq",
+    "huggingface"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1"
+  }
+}
