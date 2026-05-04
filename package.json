@@ -14,7 +14,9 @@
     "stress": "node stress-test.js",
     "sensitivity": "node prompt-sensitivity.js",
     "multilang": "node multi-langue.js",
-    "dashboard": "node dashboard.js"
+    "dashboard": "node dashboard.js",
+    "chatbot": "node chatbot-cli.js",
+    "api": "node api.js"
   },
   "keywords": [
     "ai",
