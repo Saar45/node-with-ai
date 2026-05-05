@@ -16,7 +16,15 @@
     "multilang": "node multi-langue.js",
     "dashboard": "node dashboard.js",
     "chatbot": "node chatbot-cli.js",
-    "api": "node api.js"
+    "api": "node api.js",
+    "calc-agent": "node calculatrice-agent.js",
+    "weather-agent": "node weather-agent.js",
+    "search-agent": "node search-agent.js",
+    "embedding": "node test-embedding.js",
+    "pinecone": "node pinecone-setup.js",
+    "embed": "node embed-document.js",
+    "rag": "node rag-query.js",
+    "hybrid": "node hybrid-agent.js"
   },
   "keywords": [
     "ai",

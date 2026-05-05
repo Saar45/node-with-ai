@@ -19,6 +19,8 @@ cp .env.example .env
 | HuggingFace | huggingface.co > Settings > Access Tokens   | HF_API_KEY        |
 | Pinecone    | app.pinecone.io > API Keys                  | PINECONE_API_KEY  |
 
+Pour le RAG (J3), il faut aussi `PINECONE_INDEX_NAME` et `PINECONE_INDEX_HOST` (lance `npm run pinecone` apres avoir cree l'index pour recuperer le host).
+
 Note : pour HuggingFace, le token doit avoir la permission **"Make calls to Inference Providers"**.
 
 ---
@@ -91,24 +93,75 @@ curl -X DELETE http://localhost:3000/history # reinitialiser
 
 ---
 
+## Jour 3 — Tool Use et RAG
+
+### Track A : agents avec outils
+
+Boucle agentique reutilisable dans `agent-loop.js` (`runAgent(userMessage, tools, toolFunctions, opts)`) avec retry, max rounds, fallback Groq sur 429 Mistral, et historique partage optionnel.
+
+```bash
+npm run calc-agent       # agent calculatrice (eval expressions)
+npm run weather-agent    # agent meteo (wttr.in) + calculatrice
+npm run search-agent     # agent + websearch DuckDuckGo
+```
+
+### Track B : RAG avec Pinecone
+
+```bash
+npm run embedding        # demo embeddings Mistral + similarite cosinus
+npm run pinecone         # verifie la connexion a l'index mini-perplexity
+npm run embed            # chunke un document, embed, upsert dans Pinecone
+npm run rag              # pipeline RAG complet : retrieval + generation
+npm run rag "Qui a cree Express ?"
+```
+
+### Agent hybride (jonction Track A + B)
+
+```bash
+npm run hybrid                        # 3 questions de demo
+npm run hybrid "ta question ici"      # question custom
+```
+
+Le LLM choisit lui-meme entre 4 outils :
+- `calculate` — calculs arithmetiques
+- `get_weather` — meteo temps reel
+- `web_search` — informations publiques
+- `rag_search` — corpus prive (Pinecone)
+
+Avec memoire conversationnelle (les questions suivantes se souviennent du contexte).
+
+---
+
 ## Structure du projet
 
 ```
 .
-├── chatbot-cli.js              # chatbot CLI multi-provider (J2 phases 1-7)
-├── api.js                      # API Express avec historique (J2 phase 8)
-├── chatbot-sans-memoire.js     # demo : LLM sans memoire
-├── check-connections.js        # ping des 4 providers
-├── server.js                   # serveur J1 (/check, /ask, /cost)
-├── cost-calculator.js          # estimation des couts
-├── prompt-lab.js               # 3 providers x 3 temperatures
-├── comparateur.js              # 5 taches x 3 providers
-├── same-model.js               # Groq vs HuggingFace
-├── stress-test.js              # 10 requetes paralleles
-├── prompt-sensitivity.js       # 5 formulations du meme prompt
-├── multi-langue.js             # FR/EN/ES
-├── dashboard.js                # genere results.html
-├── .env.example                # template des cles API
+├── J1 — Check Connections
+│   ├── check-connections.js
+│   ├── server.js
+│   ├── cost-calculator.js
+│   ├── prompt-lab.js
+│   ├── comparateur.js
+│   ├── same-model.js
+│   ├── stress-test.js
+│   ├── prompt-sensitivity.js
+│   ├── multi-langue.js
+│   └── dashboard.js
+├── J2 — Chatbot CLI
+│   ├── chatbot-sans-memoire.js
+│   ├── chatbot-cli.js
+│   └── api.js
+├── J3 — Tool Use et RAG
+│   ├── agent-loop.js              # runAgent reutilisable
+│   ├── calculatrice-agent.js      # outil calculate
+│   ├── weather-agent.js           # outil get_weather (wttr.in)
+│   ├── search-agent.js            # outil web_search (DuckDuckGo)
+│   ├── test-embedding.js          # embeddings Mistral + cosinus
+│   ├── pinecone-setup.js          # verification de l'index
+│   ├── embed-document.js          # chunking + upsert
+│   ├── rag-query.js               # retrieval + generation
+│   └── hybrid-agent.js            # 4 outils + memoire conv
+├── .env.example
 ├── .gitignore
 └── package.json
 ```
