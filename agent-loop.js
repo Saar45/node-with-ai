@@ -39,32 +39,51 @@ async function runToolWithRetry(fnName, fnArgs, toolFunctions) {
  * @param {Object} [opts]
  * @param {string} [opts.model='mistral-small-latest']
  * @param {string} [opts.system]                       System prompt optionnel
+ * @param {Array}  [opts.history]                      Historique partage (modifie en place) pour persister entre appels
  * @returns {Promise<string>}                           La reponse finale du modele
  */
 export async function runAgent(userMessage, tools, toolFunctions, opts = {}) {
   const model = opts.model || 'mistral-small-latest';
-  const messages = [];
-  if (opts.system) messages.push({ role: 'system', content: opts.system });
+  // Si opts.history est fourni, on travaille en place (memoire conversationnelle).
+  // Sinon, on demarre un historique local jetable.
+  const messages = opts.history || [];
+  if (opts.system && messages.length === 0) {
+    messages.push({ role: 'system', content: opts.system });
+  }
   messages.push({ role: 'user', content: userMessage });
 
-  async function callMistral() {
-    const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.MISTRAL_API_KEY}`
-      },
-      body: JSON.stringify({
-        model,
-        messages,
-        tools,
-        tool_choice: 'auto'
-      })
-    });
-    return response.json();
+  // Mistral en priorite, fallback Groq sur 429 / capacite saturee.
+  // Les deux suivent le meme format OpenAI tools — on change juste url + model.
+  const providers = [
+    { name: 'Mistral', url: 'https://api.mistral.ai/v1/chat/completions', key: process.env.MISTRAL_API_KEY, model },
+    { name: 'Groq',    url: 'https://api.groq.com/openai/v1/chat/completions', key: process.env.GROQ_API_KEY, model: 'llama-3.3-70b-versatile' }
+  ];
+
+  async function callLLM() {
+    for (const p of providers) {
+      if (!p.key || p.key.startsWith('your_')) continue;
+      const response = await fetch(p.url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${p.key}`
+        },
+        body: JSON.stringify({
+          model: p.model,
+          messages,
+          tools,
+          tool_choice: 'auto'
+        })
+      });
+      const data = await response.json();
+      if (response.ok && data.choices) return data;
+      const errMsg = data.error?.message || data.message || JSON.stringify(data).substring(0, 200);
+      console.log(`[WARN] ${p.name} : HTTP ${response.status} ${errMsg}`);
+    }
+    throw new Error('Aucun provider disponible (Mistral et Groq tous deux KO)');
   }
 
-  let data = await callMistral();
+  let data = await callLLM();
   let choice = data.choices[0];
   let round = 0;
 
@@ -95,9 +114,11 @@ export async function runAgent(userMessage, tools, toolFunctions, opts = {}) {
       });
     }
 
-    data = await callMistral();
+    data = await callLLM();
     choice = data.choices[0];
   }
 
+  // On pousse aussi le message final dans l'historique (utile pour la memoire conv)
+  messages.push(choice.message);
   return choice.message.content;
 }
