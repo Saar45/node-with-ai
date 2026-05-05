@@ -1,4 +1,3 @@
-// agent-loop.js
 // Boucle d'agent reutilisable : passe les outils au LLM, execute les tool_calls,
 // renvoie les resultats au LLM, repete jusqu'a ce qu'il formule sa reponse finale.
 import 'dotenv/config';

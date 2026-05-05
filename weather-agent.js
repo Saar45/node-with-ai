@@ -1,4 +1,3 @@
-// weather-agent.js
 // Agent qui combine 2 outils : meteo (wttr.in) + calculatrice
 import 'dotenv/config';
 import { runAgent } from './agent-loop.js';
@@ -23,9 +22,9 @@ const weatherTool = {
   }
 };
 
-// --- Implementation de l'outil ---
+
 async function get_weather({ city }) {
-  // wttr.in : API meteo publique, format JSON, aucune cle requise
+  // Fetch API
   const response = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=j1`);
 
   if (!response.ok) {
@@ -45,11 +44,11 @@ async function get_weather({ city }) {
   };
 }
 
-// --- Agent qui combine calculatrice + meteo ---
+// Combine the two tools and their functions
 const tools = [weatherTool, calculatorTool];
 const toolFunctions = { get_weather, calculate };
 
-// --- Lancement ---
+// Lancement
 const isMain = process.argv[1]?.endsWith('weather-agent.js');
 if (isMain) {
   const userMessage = process.argv[2] ||
