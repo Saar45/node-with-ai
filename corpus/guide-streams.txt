@@ -1,0 +1,52 @@
+Les streams Node.js : guide complet
+
+Les streams sont l'une des fonctionnalites les plus puissantes et les plus mal comprises de
+Node.js. Ils permettent de traiter des donnees en flux continu sans charger l'integralite
+en memoire, ce qui est crucial pour les fichiers volumineux et les transferts reseau.
+
+Il existe quatre types de streams en Node.js : Readable, Writable, Duplex et Transform.
+Les Readable streams emettent des donnees (lecture de fichier, requete HTTP entrante).
+Les Writable streams recoivent des donnees (ecriture de fichier, reponse HTTP sortante).
+Les Duplex streams font les deux simultanement (sockets TCP). Les Transform streams sont
+des Duplex qui modifient les donnees au passage (gzip, chiffrement).
+
+La gestion d'erreur dans les streams est un piege classique. Il est imperativement
+recommande d'attacher un listener 'error' avant d'ecouter 'data' ou 'end', car une erreur
+non geree leve une exception non catchee qui crashe le process. Le code minimal est :
+
+stream.on('error', (err) => console.error('Stream error:', err));
+stream.on('data', (chunk) => process(chunk));
+stream.on('end', () => console.log('Done'));
+
+Pour chainer plusieurs streams, on utilisait historiquement la methode .pipe() qui ne gere
+pas la propagation d'erreurs. Depuis Node 10, on prefere stream.pipeline() qui gere
+automatiquement les erreurs et la fermeture des ressources :
+
+import { pipeline } from 'node:stream/promises';
+await pipeline(
+  fs.createReadStream('input.txt'),
+  zlib.createGzip(),
+  fs.createWriteStream('output.txt.gz')
+);
+
+La pression de retour (backpressure) est un concept essentiel. Quand un Writable stream
+est plus lent que le Readable qui le nourrit, les donnees s'accumulent en memoire. Les
+streams natifs gerent ca automatiquement via la valeur de retour de write() : si elle
+retourne false, il faut attendre l'evenement 'drain' avant de continuer a ecrire.
+
+Les streams supportent deux modes de lecture : flowing (mode 'data', les donnees arrivent
+automatiquement) et paused (on appelle read() quand on est pret). Le mode flowing est plus
+simple mais peut causer du backpressure si le consommateur est lent. Le mode paused donne
+plus de controle.
+
+Pour creer un Transform stream personnalise, on heritait de Transform et on implementait
+_transform(chunk, encoding, callback). Depuis Node 18, on peut utiliser Readable.from() et
+des async generators pour creer des streams de facon beaucoup plus naturelle :
+
+const stream = Readable.from(async function* () {
+  for await (const line of readlines) yield process(line);
+}());
+
+Les streams sont au coeur de nombreuses APIs Node.js : fs.createReadStream, http.IncomingMessage
+et http.ServerResponse, net.Socket, child_process.stdout. Comprendre les streams, c'est
+comprendre comment Node.js gere efficacement l'I/O.
