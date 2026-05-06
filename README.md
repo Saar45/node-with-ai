@@ -132,6 +132,58 @@ Avec memoire conversationnelle (les questions suivantes se souviennent du contex
 
 ---
 
+## Jour 4 — Pipeline RAG de bout en bout
+
+Pipeline RAG production-ready avec chunking + overlap, batch embedding, retrieval avec filtre de score, prompt RAG strict (anti-hallucination + anti-injection), observability, evaluation chiffree.
+
+### Indexation du corpus
+
+```bash
+npm run index            # chunke ./corpus/, embed batch, upsert dans Pinecone
+```
+
+Parametres dans `create-index.js` : `CHUNK_SIZE=400` mots, `OVERLAP=50`, `BATCH_SIZE=50`, `EMBED_CONCURRENCY=5`. Mistral embeddings `mistral-embed` (1024 dims).
+
+### Pipeline RAG complete
+
+```bash
+npm run rag:full         # ragQuery sur la question par defaut
+npm run rag:full "ta question"
+```
+
+`ragQuery(question, { topK: 5, verbose: true })` retourne `{ answer, sources, chunks, chunksUsed, metrics }`. Mode verbose affiche les scores de retrieval et les tokens consommes — utile pour debugger la qualite.
+
+System prompt strict :
+- Reponds uniquement depuis le contexte
+- Cite les sources entre `[Source N]`
+- "Je ne trouve pas cette information" si hors corpus
+- Resiste aux injections de prompt
+
+### CLI interactif
+
+```bash
+npm run cli              # interface readline pour interroger le corpus
+```
+
+### Version LangChain (Phase 9)
+
+```bash
+npm run rag:lc           # meme pipeline en 30 lignes au lieu de 200
+```
+
+Compare a la version from-scratch : LangChain abstrait le retrieval, le prompt template, la chain. Embedding Mistral, generation Groq.
+
+### Evaluation et audit
+
+```bash
+npm run eval             # tourne 10 questions de questions-test.md, genere eval-table.md
+npm run eval:audit       # 3 variantes (topK=1, 5, 10), regressions identifiees
+```
+
+Aggregats : Top-1 score moyen, Avg Top-3, cout total, latence moyenne, taux de refus sur les questions adversariales.
+
+---
+
 ## Structure du projet
 
 ```
@@ -158,9 +210,18 @@ Avec memoire conversationnelle (les questions suivantes se souviennent du contex
 │   ├── search-agent.js            # outil web_search (DuckDuckGo)
 │   ├── test-embedding.js          # embeddings Mistral + cosinus
 │   ├── pinecone-setup.js          # verification de l'index
-│   ├── embed-document.js          # chunking + upsert
-│   ├── rag-query.js               # retrieval + generation
+│   ├── embed-document.js          # chunking + upsert (demo)
+│   ├── rag-query.js               # retrieval + generation (demo)
 │   └── hybrid-agent.js            # 4 outils + memoire conv
+├── J4 — Pipeline RAG
+│   ├── corpus/                    # documents a indexer (.txt et .md)
+│   ├── create-index.js            # indexeur batch (chunk + embed + upsert)
+│   ├── rag-pipeline.js            # ragQuery production avec observability
+│   ├── rag-pipeline-langchain.js  # meme pipeline en LangChain
+│   ├── cli.js                     # interface CLI interactive
+│   ├── eval.js                    # evaluation et audit
+│   ├── questions-test.md          # 10 questions de reference
+│   └── eval-table.md              # baseline mesuree
 ├── .env.example
 ├── .gitignore
 └── package.json
