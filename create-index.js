@@ -1,7 +1,5 @@
-// create-index.js
-// Indexeur batch : lit ./corpus/, chunke, embed via Mistral, upsert dans Pinecone.
-// On utilise l'API REST Pinecone directement (le SDK v7+ a une signature
-// instable selon les types d'index ; REST est stable et explicite).
+
+// On utilise l'API REST Pinecone directement 
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 import 'dotenv/config';
@@ -14,7 +12,7 @@ const OVERLAP = 50;
 const BATCH_SIZE = 50;        // vecteurs par upsert Pinecone
 const EMBED_CONCURRENCY = 5;  // appels d'embedding en parallele max
 
-// --- Fonctions utilitaires ---
+// Fonctions utilitaires
 
 function chunkWithOverlap(text, size, overlap) {
   const words = text.split(/\s+/).filter(Boolean);
@@ -65,7 +63,7 @@ async function embedBatch(texts) {
     .map(d => d.embedding);
 }
 
-// --- Traitement d'un fichier ---
+// Traitement d'un fichier
 
 async function upsertVectors(vectors) {
   const response = await fetch(`https://${PINECONE_HOST}/vectors/upsert`, {
