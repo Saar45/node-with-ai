@@ -1,0 +1,59 @@
+Node.js : guide d'introduction
+
+Node.js est un environnement d'execution JavaScript cote serveur, cree par Ryan Dahl en 2009.
+Il utilise le moteur V8 de Google Chrome pour executer du JavaScript hors du navigateur.
+La grande innovation de Node.js a ete d'introduire un modele non-bloquant base sur les
+evenements, ce qui le rend particulierement performant pour les applications I/O-intensives
+comme les serveurs web, les APIs REST, et les services en temps reel.
+
+L'event loop est au coeur de Node.js. C'est elle qui permet de traiter des milliers de
+connexions simultanees avec un seul thread principal. Quand on fait un appel I/O (lecture
+de fichier, requete reseau, query SQL), Node.js delegue l'operation au systeme et continue
+a traiter d'autres requetes pendant que la premiere se resout. Quand le systeme renvoie le
+resultat, l'event loop appelle le callback associe.
+
+Le module http natif permet de creer un serveur en quelques lignes. require('http')
+.createServer((req, res) => res.end('Hello')) suffit pour avoir un serveur fonctionnel sur
+le port choisi. Mais en pratique, on utilise des frameworks comme Express qui ajoutent du
+routing, du middleware, et du parsing automatique des requetes.
+
+npm, le gestionnaire de paquets de Node.js, est devenu le plus grand registre de packages
+au monde avec plus de 2 millions de modules. La commande npm install ajoute une dependance
+au projet et la sauvegarde dans package.json. Le fichier package-lock.json fige les versions
+exactes pour garantir la reproductibilite des builds.
+
+Node.js a aussi popularise le pattern asynchrone avec les callbacks, puis les Promises, et
+enfin async/await depuis Node 7.6. Le pattern async/await rend le code asynchrone aussi
+lisible que du code synchrone, ce qui a considerablement reduit la complexite des
+applications Node.js modernes.
+
+Les applications Node.js scalent horizontalement avec le module cluster, qui permet de
+demarrer plusieurs processus workers, un par coeur CPU. Pour des architectures plus
+complexes, on utilise PM2, un process manager qui gere automatiquement le clustering, les
+redemarrages en cas de crash, et le logging centralise. En production, Node.js est souvent
+deploye derriere un reverse proxy comme Nginx qui gere SSL, load balancing, et caching.
+
+Les frameworks principaux de l'ecosysteme Node.js sont :
+- Express : minimaliste, le plus populaire historiquement, cree par TJ Holowaychuk en 2010
+- Fastify : oriente performance, jusqu'a 3x plus rapide qu'Express sur certains benchmarks
+- NestJS : architecture inspiree d'Angular, fortement typee, ideale pour les gros projets
+- Koa : successeur spirituel d'Express, par les memes auteurs, base sur les async generators
+- Hapi : centre sur la configuration plutot que le code
+
+Pour les bases de donnees, Node.js dispose de drivers natifs pour PostgreSQL (pg), MySQL
+(mysql2), MongoDB (mongoose ou le driver natif), Redis (ioredis), et bien d'autres. Les
+ORM les plus utilises sont Prisma (moderne, type-safe, generateur de clients), TypeORM
+(decorators, inspire de TypeScript), et Sequelize (mature, beaucoup de features).
+
+Le langage TypeScript, cree par Microsoft en 2012, est devenu le standard pour les projets
+Node.js d'envergure. Il ajoute un systeme de types statiques au-dessus de JavaScript, ce
+qui detecte beaucoup d'erreurs a la compilation plutot qu'a l'execution. Les editeurs comme
+VS Code offrent une integration TypeScript native avec autocomplete et refactoring.
+
+Pour les tests, l'ecosysteme Node.js propose Jest (le plus populaire, avec snapshot testing
+et mocking integres), Vitest (alternative moderne basee sur Vite, tres rapide), Mocha (plus
+ancien, tres flexible), et le test runner natif depuis Node 18 (node --test).
+
+Node.js publie une nouvelle version majeure tous les 6 mois, alternant entre versions LTS
+(Long Term Support, supportees 30 mois) et versions courantes. Les versions paires (16, 18,
+20, 22) sont les LTS recommandees pour la production.

@@ -1,0 +1,50 @@
+RAG : Retrieval Augmented Generation
+
+Le RAG, pour Retrieval Augmented Generation, est une architecture qui combine la recherche
+semantique avec la generation par LLM. Au lieu de demander a un modele de repondre depuis
+sa memoire (avec le risque d'hallucination), on recupere d'abord les passages pertinents
+d'une base de connaissances, puis on les injecte dans le contexte du modele avec la question
+de l'utilisateur.
+
+La pipeline RAG se compose de cinq etapes : load, chunk, embed, store, retrieve. Le load
+charge les documents depuis leurs sources (fichiers, bases de donnees, APIs). Le chunk
+decoupe les documents en blocs de taille raisonnable, typiquement 200 a 500 tokens. L'embed
+transforme chaque chunk en vecteur dense via un modele d'embedding. Le store sauve ces
+vecteurs dans une base vectorielle. Le retrieve, au moment de la requete, embed la question
+de l'utilisateur, puis recherche les chunks les plus proches dans la base.
+
+Le chunking est une decision strategique. Des chunks trop petits perdent le contexte et
+fragmentent le sens. Des chunks trop grands diluent l'information et reduisent la precision
+du retrieval. La pratique courante est de viser 300-500 tokens par chunk, avec un overlap
+de 10-20% pour preserver le contexte aux frontieres.
+
+Les modeles d'embedding produisent des vecteurs de 768 a 4096 dimensions. mistral-embed
+genere 1024 dimensions, text-embedding-3-small d'OpenAI en genere 1536, et bge-m3 (open
+source) 1024. Plus de dimensions = plus de nuance semantique capturee, mais aussi plus de
+stockage et des recherches plus lentes.
+
+La similarite cosinus est la metrique standard pour comparer deux embeddings. Elle mesure
+l'angle entre deux vecteurs et renvoie un score entre -1 et 1. Deux phrases semantiquement
+proches ont une similarite typiquement entre 0.8 et 0.99. Deux phrases sans rapport entre
+0.1 et 0.3.
+
+Les bases vectorielles utilisent des algorithmes d'indexation specialises comme HNSW
+(Hierarchical Navigable Small World) ou IVF (Inverted File Index) pour trouver les K plus
+proches voisins en O(log n) plutot qu'O(n). Sans cet index, comparer une question contre
+50 000 vecteurs un par un serait trop lent.
+
+Les principales bases vectorielles sont Pinecone (cloud managed, serverless), Weaviate
+(open source, auto-hebergeable), Qdrant (Rust, performant), Milvus (oriente production),
+Chroma (orientee dev/prototype), et pgvector (extension PostgreSQL pour ajouter du vectoriel
+a une base SQL existante).
+
+Le prompt de generation est aussi important que le retrieval. Un bon system prompt RAG dit
+explicitement au modele de ne pas fabuler, de citer ses sources, et de dire quand l'info
+n'est pas dans le contexte. Sans ces contraintes, le modele peut completer le contexte avec
+sa connaissance generale et perdre la tracabilite.
+
+Les limites du RAG : il depend de la qualite du retrieval. Si le bon chunk n'est pas dans
+les top-K, le modele ne peut pas y acceder. Les questions qui necessitent de connecter
+plusieurs sources distantes (multi-hop reasoning) sont aussi difficiles. Pour ces cas, on
+utilise du RAG agentique : le modele decompose la question en sous-requetes, fait plusieurs
+recherches, et compose la reponse.
