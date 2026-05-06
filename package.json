@@ -24,7 +24,13 @@
     "pinecone": "node pinecone-setup.js",
     "embed": "node embed-document.js",
     "rag": "node rag-query.js",
-    "hybrid": "node hybrid-agent.js"
+    "hybrid": "node hybrid-agent.js",
+    "index": "node create-index.js",
+    "rag:full": "node rag-pipeline.js",
+    "rag:lc": "node rag-pipeline-langchain.js",
+    "cli": "node cli.js",
+    "eval": "node eval.js baseline",
+    "eval:audit": "node eval.js audit"
   },
   "keywords": [
     "ai",
@@ -36,8 +42,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@langchain/core": "^0.3.80",
+    "@langchain/groq": "^0.1.3",
+    "@langchain/mistralai": "^0.2.3",
+    "@langchain/pinecone": "^0.2.0",
     "@pinecone-database/pinecone": "^7.2.0",
     "dotenv": "^17.4.2",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "langchain": "^0.3.37"
   }
 }
