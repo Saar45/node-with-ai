@@ -1,4 +1,3 @@
-// eval.js
 // Phase 8 + 11 : evaluation et audit du pipeline RAG
 // Genere eval-table.md a partir des 10 questions de questions-test.md
 import 'dotenv/config';
@@ -145,7 +144,7 @@ if (mode === 'audit') {
   // Mode baseline simple
   const results = await runBaseline({ topK: 5, label: 'baseline' });
   let md = '# eval-table.md — Baseline RAG\n\n';
-  md += `Pipeline : retrieveContext (topK=5, threshold=0.5) + generateCompletion (mistral-small-latest, temperature 0.1)\n\n`;
+  md += `Pipeline : retrieveContext (topK=5, threshold=0.5) + generateCompletion (Groq llama-3.3-70b-versatile, temperature 0.1)\n\n`;
   md += buildTable(results, 'baseline');
   md += '\n\n### Notes humaines a remplir\n\n';
   md += 'Pertinence et Fidelite sont des notes 1-5 a remplir manuellement apres avoir lu chaque reponse.\n';

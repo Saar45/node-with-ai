@@ -7,7 +7,7 @@ import { getEmbedding } from './test-embedding.js';
 const PINECONE_HOST = process.env.PINECONE_INDEX_HOST?.replace(/^https?:\/\//, '');
 const SCORE_THRESHOLD = 0.5;
 
-// ===== Phase 4 : retrieveContext =====
+// Phase 4 : retrieveContext
 export async function retrieveContext(query, topK = 5) {
   if (!query || !query.trim()) return [];
 
@@ -42,7 +42,7 @@ export async function retrieveContext(query, topK = 5) {
     .filter(m => m.score >= SCORE_THRESHOLD);
 }
 
-// ===== Phase 5 : generateCompletion =====
+// Phase 5 : generateCompletion
 const SYSTEM_PROMPT = `Tu es un assistant expert qui repond uniquement a partir des sources fournies.
 
 Regles :
@@ -60,10 +60,11 @@ export async function generateCompletion(query, context) {
 
   const userMessage = `Contexte :\n${contextText}\n\nQuestion : ${query}`;
 
-  // Mistral en priorite, fallback Groq sur 429/503
+  // Provider unique : Groq (llama-3.3-70b-versatile)
+  // Choix pour avoir une baseline d'eval reproductible avec des chiffres
+  // tokens/cout/latence comparables d'une question a l'autre.
   const providers = [
-    { name: 'Mistral', url: 'https://api.mistral.ai/v1/chat/completions', key: process.env.MISTRAL_API_KEY, model: 'mistral-small-latest' },
-    { name: 'Groq',    url: 'https://api.groq.com/openai/v1/chat/completions', key: process.env.GROQ_API_KEY, model: 'llama-3.3-70b-versatile' }
+    { name: 'Groq', url: 'https://api.groq.com/openai/v1/chat/completions', key: process.env.GROQ_API_KEY, model: 'llama-3.3-70b-versatile' }
   ];
 
   const body = JSON.stringify({
@@ -127,10 +128,10 @@ function buildSourcesList(chunks, answer) {
   return { sources, orphanCitations };
 }
 
-// Estimation cout (Mistral Small : $0.10 input, $0.30 output / 1M tokens)
+// Estimation cout pour Groq llama-3.3-70b-versatile : $0.59/M in, $0.79/M out
 function estimateCost(promptTokens, completionTokens) {
-  const inputCost = (promptTokens / 1_000_000) * 0.10;
-  const outputCost = (completionTokens / 1_000_000) * 0.30;
+  const inputCost = (promptTokens / 1_000_000) * 0.59;
+  const outputCost = (completionTokens / 1_000_000) * 0.79;
   return Number((inputCost + outputCost).toFixed(6));
 }
 
